@@ -1,9 +1,14 @@
 // Seeds the product catalogue from design-reference/prototype.jsx's PRODUCTS
-// array (mirrors the Nature's Hair retail range). Run with `npm run db:seed`.
-// User accounts are seeded in Phase 2 once Auth.js password hashing is wired up.
+// array (mirrors the Nature's Hair retail range), plus one admin account when
+// ADMIN_EMAIL/ADMIN_PASSWORD are set. Run with `npm run db:seed`.
+import { config } from "dotenv";
 import { sql } from "drizzle-orm";
+import { hashPassword } from "../lib/password";
+
+config({ path: ".env.local" });
+
 import { db } from "./index";
-import { products } from "./schema";
+import { products, users } from "./schema";
 
 type SeedProduct = {
   sku: string;
@@ -64,6 +69,29 @@ async function seed() {
       });
   }
   console.log(`Seeded ${SEED_PRODUCTS.length} products.`);
+
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (adminEmail && adminPassword) {
+    const passwordHash = await hashPassword(adminPassword);
+    await db
+      .insert(users)
+      .values({
+        role: "admin",
+        name: "Admin",
+        email: adminEmail,
+        phone: "0000000000",
+        passwordHash,
+      })
+      .onConflictDoUpdate({
+        target: users.email,
+        set: { passwordHash: sql`excluded.password_hash`, role: sql`excluded.role` },
+      });
+    console.log(`Seeded admin account ${adminEmail}.`);
+  } else {
+    console.log("ADMIN_EMAIL/ADMIN_PASSWORD not set — skipped admin seed.");
+  }
+
   process.exit(0);
 }
 
