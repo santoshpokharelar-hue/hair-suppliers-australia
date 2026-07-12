@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SiteHeader } from "@/components/site/site-header";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,7 +15,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full antialiased">
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+      <body className="min-h-full flex flex-col font-sans">
+        <SiteHeader />
+        <main className="flex flex-1 flex-col">{children}</main>
+        <footer className="mt-12 border-t border-line px-6 py-6 text-center text-xs text-muted-foreground">
+          Hair Suppliers Australia — wholesale partner of Nature&apos;s Hair retail stores · Demo
+          build (branding not final)
+        </footer>
+      </body>
     </html>
   );
 }
