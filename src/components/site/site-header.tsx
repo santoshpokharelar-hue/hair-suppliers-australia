@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Leaf, LogOut, Shield, User } from "lucide-react";
+import { Leaf, LogOut, Package, Shield, User } from "lucide-react";
 import { auth } from "@/auth";
 import { CartButton } from "@/components/cart/cart-button";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,9 @@ export async function SiteHeader() {
         )}
         {user ? (
           <div className="flex items-center gap-3">
+            <Button render={<Link href="/orders" />} nativeButton={false} variant="ghost" size="sm">
+              <Package className="size-3.5" /> My orders
+            </Button>
             <CartButton />
             <div className="text-right">
               <div className="text-sm font-bold leading-tight">{user.name}</div>
