@@ -193,24 +193,29 @@ RESEND_API_KEY=             EMAIL_FROM=orders@…
 1. **Scaffold**: Next.js + Tailwind + shadcn/ui + Drizzle + Supabase connection; seed script
    with the ~20 real products (SKUs `HSA-…`, retail prices from Nature's Hair). ✅ done
 2. **Auth**: Auth.js credentials, signup flows for guest (with address) and business
-   (ABN optional, unverified), role in session, middleware for `/admin`.
+   (ABN optional, unverified), role in session, middleware for `/admin`. ✅ done
 3. **Catalogue**: landing page, product grid, lifestyle imagery section, search; price-gating
-   (tier table only when logged in).
-4. **Cart & pricing**: cart state, tier math from `pricing.ts`, live per-unit updates.
+   (tier table only when logged in). ✅ done
+4. **Cart & pricing**: cart state, tier math from `pricing.ts`, live per-unit updates. ✅ done
 5. **Quote request**: address step (plain manual entry, no carrier lookup), order +
-   order_items written to DB as `quote_requested`; admin notification email.
+   order_items written to DB as `quote_requested`; admin notification email. ✅ done
 6. **Admin quoting**: dashboard tab for quote requests, freight input, send-quote action,
-   quote email with tokenised pay link, expiry + edit-invalidation logic.
+   quote email with tokenised pay link, expiry + edit-invalidation logic. ✅ done
 7. **Payment**: quote review page, server-side price recompute + freight, Stripe
-   PaymentIntent + webhook → `paid`, stock decrement.
+   PaymentIntent + webhook → `paid`, stock decrement. ✅ code done — **untested**, no live
+   Stripe keys configured (see Resolved).
 8. **Emails**: React Email templates (quote request ack, quote ready, payment received,
-   finalized, cancelled/declined) via Resend.
+   finalized, cancelled/declined) via Resend. ✅ code done — **untested**, no live Resend key
+   configured; falls back to a console.log no-op locally (see Resolved).
 9. **Customer orders page**: list own orders; edit qty / cancel before paid (edits while
-   quoted revert to quote_requested).
+   quoted revert to quote_requested). ✅ done
 10. **Admin dashboard**: full tabbed order lists (quote requests / quoted / paid / finalized
-    / cancelled), edit/status/delete, hidden from non-admins.
+    / cancelled), edit/status/delete, hidden from non-admins. ✅ done
 11. **Polish**: empty states, loading states, mobile layout, quote-expiry cron, basic rate
-    limiting on auth endpoints, error monitoring.
+    limiting on auth endpoints, error monitoring. ✅ mostly done — quote-expiry is an on-read
+    sweep (not a real cron), rate limiting is in-memory/per-instance only, and error
+    monitoring is just graceful error boundaries (no Sentry/equivalent — none was configured).
+    See Resolved.
 
 ## Design reference
 
@@ -261,3 +266,29 @@ RESEND_API_KEY=             EMAIL_FROM=orders@…
   street, suburb, state, 4-digit postcode. `trackingNumber` on `orders` stays a free-text
   field so it can hold a FedEx (or any carrier) number, not an AusPost-specific one.
   `src/lib/auspost.ts` and the postcode-lookup Server Action have been removed.
+- Phases 6–11 were all built in one pass, without live Stripe or Resend credentials in the
+  environment (`.env.local` only had `DATABASE_URL`/`AUTH_SECRET`/`ADMIN_EMAIL`/
+  `ADMIN_PASSWORD` at the time). Concretely:
+  - **Stripe**: `src/lib/stripe.ts` lazy-inits (same pattern as `src/db/index.ts`) so
+    `next build` doesn't require `STRIPE_SECRET_KEY`. The whole PaymentIntent → Payment
+    Element → webhook → `paid` path has never been exercised against a real Stripe account —
+    add real test-mode keys and walk a full payment before trusting it in front of a customer.
+  - **Resend**: `src/lib/resend.ts` returns `null` when `RESEND_API_KEY` is unset, and every
+    send falls back to a `console.log` no-op (same spirit as the old AusPost mock fallback) —
+    so the app never crashes locally, but no email template has ever actually been delivered
+    or visually checked in an inbox. Add a real key and send at least one of each template
+    before trusting the copy/formatting.
+  - **Rate limiting** (`src/lib/rate-limit.ts`) is an in-memory per-instance token bucket —
+    fine for a single long-running server, but on Vercel's serverless model each instance has
+    its own memory, so it's a soft speed bump, not a hard limit. A real deployment wanting
+    this enforced would need a shared store (Upstash Redis, etc.).
+  - **Error monitoring** is just `app/error.tsx` + `app/global-error.tsx` boundaries — no
+    Sentry/equivalent is wired up, since no DSN or service was specified. Errors currently
+    only go to server logs.
+  - **Quote expiry** (`src/lib/expire-quotes.ts`) is an on-read sweep called from the admin
+    dashboard, My Orders, and order-detail pages — not an actual scheduled cron — matching
+    the "cron/on-read check" language CLAUDE.md already allowed for this.
+  - None of the Phase 6–11 interactive flows (admin send-quote, Stripe checkout, customer
+    qty-edit/cancel) have been clicked through in a real browser — no browser automation tool
+    was available in that session. Verified by typecheck + build + targeted DB-level checks
+    only.
