@@ -4,7 +4,10 @@ import { inArray } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { orderItems, orders, products, type ShippingAddressSnapshot } from "@/db/schema";
+import { sendAdminNewQuoteRequestEmail, sendQuoteRequestAckEmail } from "@/lib/email";
+import { isUniqueViolation, randomOrderNumber } from "@/lib/order-token";
 import { unitPriceCents } from "@/lib/pricing";
+import { getOrderById } from "@/lib/queries/orders";
 import { quoteRequestSchema, type QuoteRequestInput } from "@/lib/validation/quote";
 
 export type QuoteRequestState = {
@@ -13,17 +16,6 @@ export type QuoteRequestState = {
   fieldErrors?: Record<string, string[]>;
   orderNumber?: string;
 };
-
-function randomOrderNumber(): string {
-  return `HSA-${10000 + Math.floor(Math.random() * 89999)}`;
-}
-
-// Postgres unique_violation — thrown if a randomly generated orderNumber
-// collides with an existing one. Retried below rather than prevented, since
-// collisions are rare and this avoids needing a dedicated DB sequence.
-function isUniqueViolation(err: unknown): boolean {
-  return typeof err === "object" && err !== null && (err as { code?: string }).code === "23505";
-}
 
 export async function createQuoteRequestAction(input: QuoteRequestInput): Promise<QuoteRequestState> {
   const session = await auth();
@@ -81,8 +73,9 @@ export async function createQuoteRequestAction(input: QuoteRequestInput): Promis
 
   for (let attempt = 0; attempt < 5; attempt++) {
     const orderNumber = randomOrderNumber();
+    let orderId: string;
     try {
-      await db.transaction(async (tx) => {
+      orderId = await db.transaction(async (tx) => {
         const [order] = await tx
           .insert(orders)
           .values({
@@ -95,12 +88,26 @@ export async function createQuoteRequestAction(input: QuoteRequestInput): Promis
           .returning({ id: orders.id });
 
         await tx.insert(orderItems).values(lineItems.map((item) => ({ ...item, orderId: order.id })));
+        return order.id;
       });
-      return { ok: true, orderNumber };
     } catch (err) {
       if (isUniqueViolation(err)) continue;
       throw err;
     }
+
+    // Best-effort — a failed email should never fail an order that already
+    // committed. sendQuoteRequestAckEmail/sendAdminNewQuoteRequestEmail each
+    // swallow their own send errors, but the re-fetch here is wrapped too.
+    try {
+      const fullOrder = await getOrderById(orderId);
+      if (fullOrder) {
+        await Promise.all([sendQuoteRequestAckEmail(fullOrder), sendAdminNewQuoteRequestEmail(fullOrder)]);
+      }
+    } catch (err) {
+      console.error("Failed to send quote request emails:", err);
+    }
+
+    return { ok: true, orderNumber };
   }
 
   return { ok: false, message: "Couldn't generate a unique order number — please try again." };
