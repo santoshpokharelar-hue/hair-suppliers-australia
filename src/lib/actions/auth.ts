@@ -7,6 +7,7 @@ import { signIn, signOut } from "@/auth";
 import { db } from "@/db";
 import { addresses, users } from "@/db/schema";
 import { hashPassword } from "@/lib/password";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import {
   businessSignupSchema,
   guestSignupSchema,
@@ -19,12 +20,20 @@ export type FormState = {
   fieldErrors?: Record<string, string[]>;
 };
 
+const RATE_LIMIT_MESSAGE: FormState = {
+  ok: false,
+  message: "Too many attempts — please wait a few minutes and try again.",
+};
+
 async function emailTaken(email: string): Promise<boolean> {
   const [existing] = await db.select({ id: users.id }).from(users).where(eq(users.email, email)).limit(1);
   return Boolean(existing);
 }
 
 export async function signUpGuestAction(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const ip = await getClientIp();
+  if (!checkRateLimit(`signup:${ip}`, 5, 60 * 60 * 1000)) return RATE_LIMIT_MESSAGE;
+
   const parsed = guestSignupSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return { ok: false, fieldErrors: parsed.error.flatten().fieldErrors };
@@ -63,6 +72,9 @@ export async function signUpGuestAction(_prevState: FormState, formData: FormDat
 }
 
 export async function signUpBusinessAction(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const ip = await getClientIp();
+  if (!checkRateLimit(`signup:${ip}`, 5, 60 * 60 * 1000)) return RATE_LIMIT_MESSAGE;
+
   const parsed = businessSignupSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return { ok: false, fieldErrors: parsed.error.flatten().fieldErrors };
@@ -89,6 +101,9 @@ export async function signUpBusinessAction(_prevState: FormState, formData: Form
 }
 
 export async function loginAction(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const ip = await getClientIp();
+  if (!checkRateLimit(`login:${ip}`, 10, 5 * 60 * 1000)) return RATE_LIMIT_MESSAGE;
+
   const parsed = loginSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return { ok: false, fieldErrors: parsed.error.flatten().fieldErrors };
