@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { Lock, MapPin, User, Building2 } from "lucide-react";
+import { useActionState } from "react";
+import { Lock, User, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,6 @@ import {
   signUpGuestAction,
   type FormState,
 } from "@/lib/actions/auth";
-import { lookupPostcodeAction } from "@/lib/actions/postcode";
 
 const INITIAL_STATE: FormState = { ok: false };
 
@@ -102,21 +101,6 @@ function SignInForm() {
 
 function GuestSignupForm() {
   const [state, formAction, pending] = useActionState(signUpGuestAction, INITIAL_STATE);
-  const [suburb, setSuburb] = useState("");
-  const [stateVal, setStateVal] = useState("");
-  const [postcode, setPostcode] = useState("");
-  const [lookupError, setLookupError] = useState("");
-
-  async function lookup() {
-    setLookupError("");
-    const matches = await lookupPostcodeAction(postcode);
-    if (matches.length > 0) {
-      setSuburb(matches[0].suburb);
-      setStateVal(matches[0].state);
-    } else {
-      setLookupError("Postcode not found. Enter suburb/state manually.");
-    }
-  }
 
   return (
     <form action={formAction}>
@@ -133,39 +117,11 @@ function GuestSignupForm() {
       />
       <div className="text-honey mb-2 mt-4 text-xs font-bold tracking-wide">SHIPPING ADDRESS</div>
       <Field id="street" label="Street address" required errors={state.fieldErrors?.street} />
-      <div className="mb-3 grid grid-cols-[100px_1fr_auto] items-end gap-2.5">
-        <div>
-          <Label htmlFor="postcode" className="mb-1.5 text-plum-dark">
-            Postcode <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="postcode"
-            name="postcode"
-            required
-            value={postcode}
-            onChange={(e) => setPostcode(e.target.value)}
-          />
-        </div>
-        <div>
-          <Label htmlFor="suburb" className="mb-1.5 text-plum-dark">
-            Suburb <span className="text-destructive">*</span>
-          </Label>
-          <Input id="suburb" name="suburb" required value={suburb} onChange={(e) => setSuburb(e.target.value)} />
-        </div>
-        <Button type="button" variant="secondary" onClick={lookup} className="mb-0">
-          <MapPin className="size-3.5" /> Look up
-        </Button>
+      <div className="grid grid-cols-[100px_1fr] gap-2.5">
+        <Field id="postcode" label="Postcode" required errors={state.fieldErrors?.postcode} />
+        <Field id="suburb" label="Suburb" required errors={state.fieldErrors?.suburb} />
       </div>
-      <FieldError messages={state.fieldErrors?.postcode ?? state.fieldErrors?.suburb} />
-      {lookupError && <p className="text-destructive mb-2 text-xs">{lookupError}</p>}
-      <Field
-        id="state"
-        label="State"
-        required
-        value={stateVal}
-        onChange={(e) => setStateVal(e.target.value)}
-        errors={state.fieldErrors?.state}
-      />
+      <Field id="state" label="State" required errors={state.fieldErrors?.state} />
       {state.message && <p className="text-destructive mb-3 text-sm font-medium">{state.message}</p>}
       <Button type="submit" disabled={pending} className="w-full justify-center">
         <Lock className="size-4" /> {pending ? "Creating account…" : "Sign up & unlock pricing"}

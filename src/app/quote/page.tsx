@@ -1,26 +1,22 @@
 import { redirect } from "next/navigation";
-import { Truck } from "lucide-react";
 import { auth } from "@/auth";
+import { QuoteRequestForm } from "@/components/quote/quote-request-form";
+import { getDefaultAddress } from "@/lib/queries/addresses";
 
-// Placeholder — the real quote request flow (shipping address step with
-// AusPost lookup, writing the order + order_items as `quote_requested`,
-// admin notification email) is Phase 5. This just proves the route is
-// reachable only when signed in, matching the cart's CTA target.
 export default async function QuotePage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
+  const defaultAddress = await getDefaultAddress(session.user.id);
+
   return (
-    <div className="mx-auto max-w-2xl px-5 py-10">
-      <div className="mb-1 flex items-center gap-2.5">
-        <Truck className="size-6 text-plum" />
-        <h1 className="font-display text-2xl font-bold text-plum-dark">Request a quote</h1>
-      </div>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Signed in as {session.user.email}. The shipping address step and quote submission land
-        in a later phase — this placeholder just proves the cart&apos;s &quot;Get final quote
-        with shipping&quot; button reaches a real, signed-in-only route.
+    <div className="mx-auto w-full max-w-4xl px-5 py-9">
+      <h1 className="font-display text-2xl font-bold text-plum-dark">Request a quote</h1>
+      <p className="mb-6 mt-1 text-sm text-muted-foreground">
+        Confirm where this ships to. We&apos;ll price freight by hand and email you a quote to
+        pay once it&apos;s ready.
       </p>
+      <QuoteRequestForm defaultAddress={defaultAddress} />
     </div>
   );
 }

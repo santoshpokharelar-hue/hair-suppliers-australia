@@ -21,8 +21,9 @@ Core rule of the whole site: **prices are hidden until the user logs in.**
 - Auth.js (NextAuth) with credentials/email login; session includes `role`
 - Stripe for payments (AUD), Stripe webhooks for payment confirmation
 - Resend + React Email for transactional emails
-- Australia Post APIs for postcode/address validation
 - Deployed on Vercel
+- No shipping-carrier API integration (see Resolved) — freight is priced and shipped manually
+  by the admin via their own FedEx account; address fields are plain manual entry.
 
 ## Roles & access rules (enforce server-side, never client-only)
 
@@ -50,8 +51,8 @@ Two customer account types, one login portal:
 
 **Guest account** — contact form + shipping address:
 - full name, email, phone (all required)
-- shipping address: street, suburb, state, 4-digit postcode
-- postcode validated / suburb auto-filled via Australia Post Postcode Search API
+- shipping address: street, suburb, state, 4-digit postcode — plain manual entry, format
+  validated (4-digit postcode) but no carrier API lookup/auto-fill (see Resolved)
 
 **Business account** — contact form + business details:
 - full name, email, phone (required)
@@ -155,9 +156,9 @@ Rules:
 1. **Cart**: line items with live tier pricing. Total row reads
    `Total: $X + shipping (quoted after review)` — never show a fake shipping number.
    Primary CTA: **"Get final quote with shipping"** (no payment fields at this step).
-2. **Quote request page**: confirm/enter shipping address (guests default to saved address).
-   Postcode validated / suburb auto-filled via AusPost Postcode Search API. Optional order
-   note. Submitting creates the order with status `quote_requested`, snapshots items +
+2. **Quote request page**: confirm/enter shipping address (guests default to saved address) —
+   plain manual entry (street, suburb, state, 4-digit postcode), no carrier lookup. Optional
+   order note. Submitting creates the order with status `quote_requested`, snapshots items +
    address, emails an acknowledgment to the customer and a notification to the admin.
 3. **Admin quoting** (dashboard → Quote requests): admin reviews the items and destination
    and manually decides freight — no weight or rate-table logic, it's a judgement call per
@@ -172,7 +173,8 @@ Rules:
 5. Stripe webhook (`payment_intent.succeeded`) → status `paid`, stock decremented,
    payment-confirmation email sent (full itemised table: SKU, name, qty, unit price, line
    total, freight, grand total).
-6. Admin ships → marks `finalized` (optional AusPost tracking number field) → finalized email.
+6. Admin ships via their own FedEx account → marks `finalized` (optional free-text tracking
+   number field, any carrier) → finalized email.
 
 Very large orders are expected — there is no upper cap; the admin simply prices
 freight/courier accordingly, or marks the order as local pickup.
@@ -184,11 +186,7 @@ DATABASE_URL=
 AUTH_SECRET=
 STRIPE_SECRET_KEY=          STRIPE_WEBHOOK_SECRET=      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
 RESEND_API_KEY=             EMAIL_FROM=orders@…
-AUSPOST_API_KEY=            # developers.auspost.com.au — Postcode Search API
 ```
-
-- Wrap the AusPost API in `src/lib/auspost.ts` with a mock fallback when the env var is
-  missing, so local dev works without keys.
 
 ## Build phases (work in this order; keep each phase shippable)
 
@@ -199,8 +197,8 @@ AUSPOST_API_KEY=            # developers.auspost.com.au — Postcode Search API
 3. **Catalogue**: landing page, product grid, lifestyle imagery section, search; price-gating
    (tier table only when logged in).
 4. **Cart & pricing**: cart state, tier math from `pricing.ts`, live per-unit updates.
-5. **Quote request**: address step with AusPost lookup, order + order_items written to DB as
-   `quote_requested`; admin notification email.
+5. **Quote request**: address step (plain manual entry, no carrier lookup), order +
+   order_items written to DB as `quote_requested`; admin notification email.
 6. **Admin quoting**: dashboard tab for quote requests, freight input, send-quote action,
    quote email with tokenised pay link, expiry + edit-invalidation logic.
 7. **Payment**: quote review page, server-side price recompute + freight, Stripe
@@ -227,8 +225,8 @@ AUSPOST_API_KEY=            # developers.auspost.com.au — Postcode Search API
   4-tier price table and quick-pack buttons ×1/×6/×12/48+, login portal tabs, cart, my-orders
   cards, admin tabbed dashboard).
 - Do NOT port: inline styles (use Tailwind + shadcn/ui), in-memory state as a database, mock
-  payment, the simulated AusPost dataset, the hardcoded admin credentials, or the fixed-fee
-  checkout flow.
+  payment, the simulated AusPost postcode-lookup dataset (AusPost integration is cancelled —
+  see Resolved), the hardcoded admin credentials, or the fixed-fee checkout flow.
 - Put all ported colours/fonts into a single theme/tokens file (branding is not final).
 
 ## Conventions
@@ -257,3 +255,9 @@ AUSPOST_API_KEY=            # developers.auspost.com.au — Postcode Search API
 - ABN verification is cancelled entirely: no checksum validation, no ABR Lookup API call.
   ABN is an optional free-text field on business accounts — an unregistered business
   (e.g. a garage salon) can still sign up and order.
+- AusPost integration is cancelled (not just deferred): no Postcode Search API, no
+  auto-fill/validation beyond a 4-digit format check. The admin ships manually using their own
+  FedEx account. All address fields (guest signup, quote request) are plain manual entry —
+  street, suburb, state, 4-digit postcode. `trackingNumber` on `orders` stays a free-text
+  field so it can hold a FedEx (or any carrier) number, not an AusPost-specific one.
+  `src/lib/auspost.ts` and the postcode-lookup Server Action have been removed.
