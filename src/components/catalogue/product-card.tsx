@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { Eye, Lock } from "lucide-react";
+import { AddToCartControls } from "@/components/catalogue/add-to-cart-controls";
 import { ProductArt } from "@/components/catalogue/product-art";
 import { Button } from "@/components/ui/button";
 import type { products } from "@/db/schema";
-import { formatAUD } from "@/lib/format";
-import { PRICING_TIERS, unitPriceCents } from "@/lib/pricing";
 
 type Product = typeof products.$inferSelect;
 
@@ -25,23 +24,13 @@ export function ProductCard({ product, loggedIn }: { product: Product; loggedIn:
 
         <div className="mt-auto">
           {loggedIn ? (
-            <div className="overflow-hidden rounded-lg border border-line">
-              {PRICING_TIERS.map((tier, i) => (
-                <div
-                  key={tier.label}
-                  className={`flex justify-between px-2.5 py-1.5 text-xs ${i % 2 ? "bg-[#FCFAF6]" : "bg-white"}`}
-                >
-                  <span>
-                    {tier.label}{" "}
-                    <span className="text-muted-foreground">({tier.range})</span>
-                  </span>
-                  <span className="font-semibold">
-                    {formatAUD(unitPriceCents(product.retailPriceCents, tier.min))}/u
-                    {tier.offPercent ? ` · ${tier.offPercent}% off` : ""}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <AddToCartControls
+              productId={product.id}
+              sku={product.sku}
+              name={product.name}
+              brand={product.brand}
+              retailPriceCents={product.retailPriceCents}
+            />
           ) : (
             <>
               <div className="flex items-center gap-2 rounded-lg border border-dashed border-line bg-paper px-3 py-3 text-xs text-muted-foreground">

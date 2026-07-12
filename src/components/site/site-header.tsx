@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Leaf, LogOut, Shield, User } from "lucide-react";
 import { auth } from "@/auth";
+import { CartButton } from "@/components/cart/cart-button";
 import { Button } from "@/components/ui/button";
 import { signOutAction } from "@/lib/actions/auth";
 
@@ -34,7 +35,8 @@ export async function SiteHeader() {
           </Button>
         )}
         {user ? (
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-3">
+            <CartButton />
             <div className="text-right">
               <div className="text-sm font-bold leading-tight">{user.name}</div>
               <div className="text-xs capitalize text-muted-foreground">{user.role} account</div>
