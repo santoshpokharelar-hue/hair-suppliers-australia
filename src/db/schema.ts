@@ -18,6 +18,7 @@ export const orderStatusEnum = pgEnum("order_status", [
   "finalized",
   "cancelled",
 ]);
+export type OrderStatus = (typeof orderStatusEnum.enumValues)[number];
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
