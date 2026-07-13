@@ -89,7 +89,9 @@ export function unitPriceCents(retailCents: number, qty: number): number {
 - All money is stored and computed in **integer cents**, AUD.
 - The client may display tier tables, but the **server recomputes every line price** whenever
   an order is created or edited. Never trust prices from the client.
-- Show the full 4-tier table on each product card so buyers see the incentive to order more.
+- Show the full 4-tier table on the product detail page so buyers see the incentive to order
+  more. (Originally this lived on every catalogue card too — moved to the product page only,
+  see Resolved: the grid card is now just image/name/price so it stays scannable.)
 - Prices are GST-inclusive; tax invoices are required (itemised GST breakdown) — confirmed with
   owner. Show "inc. GST" label.
 
@@ -322,3 +324,9 @@ SUPABASE_URL=               SUPABASE_SERVICE_ROLE_KEY=  # product photo uploads 
   `<img>`, not `next/image`, since the Storage hostname is per-project and there's no fixed
   domain to whitelist) on the catalogue product card and cart line items — previously it was
   captured in the schema/admin form but never displayed anywhere.
+- Catalogue card redesign (owner feedback): the grid card used to carry the full 4-tier
+  pricing table + quantity stepper + add-to-cart, which made cards busy and shrank the photo
+  — the thing actually meant to draw attention. Cards are now image + name + retail price
+  only (or a "login to see price" lock when logged out), with a new `/products/[id]` page
+  holding all the buying UI. `ProductArt`'s height used to be hardcoded at 150px everywhere;
+  it now takes a `className` so callers size it per context.
