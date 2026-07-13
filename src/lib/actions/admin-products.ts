@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { products } from "@/db/schema";
+import { uploadProductImage, type UploadResult } from "@/lib/supabase-storage";
 import { productSchema, type ProductInput } from "@/lib/validation/product";
 
 export type ProductActionState = {
@@ -86,6 +87,18 @@ export async function setProductActiveAction(productId: string, active: boolean)
   revalidatePath("/admin/products");
   revalidatePath("/");
   return { ok: true };
+}
+
+export async function uploadProductImageAction(formData: FormData): Promise<UploadResult> {
+  const admin = await requireAdmin();
+  if ("error" in admin) return { ok: false, message: admin.error ?? "Forbidden." };
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { ok: false, message: "No file selected." };
+  }
+
+  return uploadProductImage(file);
 }
 
 export async function deleteProductAction(productId: string): Promise<ProductActionState> {

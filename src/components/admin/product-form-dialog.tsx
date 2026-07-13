@@ -1,8 +1,13 @@
 "use client";
 
-import { Loader2, Pencil, Plus } from "lucide-react";
-import { useState, useTransition } from "react";
-import { createProductAction, updateProductAction, type ProductActionState } from "@/lib/actions/admin-products";
+import { ImageUp, Loader2, Pencil, Plus } from "lucide-react";
+import { useRef, useState, useTransition } from "react";
+import {
+  createProductAction,
+  updateProductAction,
+  uploadProductImageAction,
+  type ProductActionState,
+} from "@/lib/actions/admin-products";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -39,6 +44,27 @@ export function ProductFormDialog({ product }: { product?: Product }) {
   const [active, setActive] = useState(product?.active ?? true);
   const [result, setResult] = useState<ProductActionState | null>(null);
   const [pending, startTransition] = useTransition();
+  const [uploading, startUpload] = useTransition();
+  const [uploadError, setUploadError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setUploadError("");
+    startUpload(async () => {
+      const formData = new FormData();
+      formData.set("file", file);
+      const res = await uploadProductImageAction(formData);
+      if (res.ok) {
+        setImageUrl(res.url);
+      } else {
+        setUploadError(res.message);
+      }
+    });
+  }
 
   function submit() {
     const input = {
@@ -153,15 +179,38 @@ export function ProductFormDialog({ product }: { product?: Product }) {
           </div>
         </div>
         <div className="mb-3">
-          <Label htmlFor="imageUrl" className="mb-1.5 text-plum-dark">
-            Image URL (optional)
-          </Label>
-          <Input
-            id="imageUrl"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="https://…"
-          />
+          <Label className="mb-1.5 text-plum-dark">Photo (optional)</Label>
+          <div className="flex items-center gap-3">
+            <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-line bg-paper">
+              {imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element -- Supabase Storage URL, no fixed hostname to whitelist for next/image
+                <img src={imageUrl} alt="" className="size-full object-cover" />
+              ) : (
+                <ImageUp className="size-5 text-muted-foreground" />
+              )}
+            </div>
+            <div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                onChange={handleFileSelected}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={uploading}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {uploading && <Loader2 className="size-3.5 animate-spin" />}
+                {uploading ? "Uploading…" : imageUrl ? "Replace photo" : "Upload photo"}
+              </Button>
+              <div className="mt-1 text-xs text-muted-foreground">JPG, PNG, or WEBP · up to 5MB</div>
+              {uploadError && <p className="mt-1 text-xs text-destructive">{uploadError}</p>}
+            </div>
+          </div>
         </div>
         <label className="mb-1 flex items-center gap-2 text-sm">
           <Checkbox checked={active} onCheckedChange={(c) => setActive(c === true)} />
@@ -174,7 +223,7 @@ export function ProductFormDialog({ product }: { product?: Product }) {
           <Button variant="outline" onClick={() => setOpen(false)} disabled={pending}>
             Cancel
           </Button>
-          <Button onClick={submit} disabled={pending}>
+          <Button onClick={submit} disabled={pending || uploading}>
             {pending && <Loader2 className="size-4 animate-spin" />}
             {isEdit ? "Save changes" : "Add product"}
           </Button>

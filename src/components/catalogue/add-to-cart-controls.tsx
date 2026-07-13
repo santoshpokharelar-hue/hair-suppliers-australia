@@ -17,12 +17,14 @@ export function AddToCartControls({
   name,
   brand,
   retailPriceCents,
+  imageUrl,
 }: {
   productId: string;
   sku: string;
   name: string;
   brand: string;
   retailPriceCents: number;
+  imageUrl: string | null;
 }) {
   const [qty, setQty] = useState(1);
   const { addItem } = useCart();
@@ -81,7 +83,7 @@ export function AddToCartControls({
           size="sm"
           className="flex-1 justify-center"
           onClick={() => {
-            addItem({ productId, sku, name, brand, retailPriceCents }, qty);
+            addItem({ productId, sku, name, brand, retailPriceCents, imageUrl }, qty);
             toast.success(`Added ${qty} × ${name.split(" ").slice(0, 3).join(" ")}…`);
           }}
         >

@@ -10,7 +10,7 @@ type Product = typeof products.$inferSelect;
 export function ProductCard({ product, loggedIn }: { product: Product; loggedIn: boolean }) {
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border border-line bg-card">
-      <ProductArt brand={product.brand} />
+      <ProductArt brand={product.brand} imageUrl={product.imageUrl} />
       <div className="flex flex-1 flex-col p-4">
         <div className="text-[10.5px] font-extrabold uppercase tracking-wide text-honey">
           {product.category}
@@ -30,6 +30,7 @@ export function ProductCard({ product, loggedIn }: { product: Product; loggedIn:
               name={product.name}
               brand={product.brand}
               retailPriceCents={product.retailPriceCents}
+              imageUrl={product.imageUrl}
             />
           ) : (
             <>

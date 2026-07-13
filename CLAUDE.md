@@ -101,7 +101,7 @@ users:        id, role ('guest'|'business'|'admin'), name, email (unique), phone
               disabled boolean (admin kill switch, blocks sign-in), createdAt
 addresses:    id, userId, street, suburb, state, postcode, isDefault
 products:     id, sku (unique, e.g. 'HSA-MIE-001'), name, brand, category,
-              retailPriceCents, stockQty, imageUrl, active boolean
+              retailPriceCents, stockQty, imageUrl (Supabase Storage public URL), active boolean
 orders:       id, orderNumber (e.g. 'HSA-10041'), userId,
               status ('quote_requested'|'quoted'|'paid'|'finalized'|'cancelled'),
               shippingAddress (denormalised snapshot), freightCents?, isPickup boolean,
@@ -192,6 +192,7 @@ DATABASE_URL=
 AUTH_SECRET=
 STRIPE_SECRET_KEY=          STRIPE_WEBHOOK_SECRET=      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
 RESEND_API_KEY=             EMAIL_FROM=orders@…
+SUPABASE_URL=               SUPABASE_SERVICE_ROLE_KEY=  # product photo uploads (Storage), not DATABASE_URL
 ```
 
 ## Build phases (work in this order; keep each phase shippable)
@@ -310,7 +311,14 @@ RESEND_API_KEY=             EMAIL_FROM=orders@…
   Added `users.disabled` (boolean, default false) via `drizzle-kit push` — no migration file,
   since this project has used `db:push` exclusively so far, no `drizzle/` migrations folder
   exists. A disabled user's `authorize()` call returns null just like a wrong password would
-  (no distinct error message, so disabling doesn't announce itself). Product images are still
-  a plain optional `imageUrl` text field (paste a URL) — no file upload was wired up, since
-  that would mean picking a storage provider (Vercel Blob is the natural fit) and no one has
-  confirmed that's wanted yet.
+  (no distinct error message, so disabling doesn't announce itself).
+- Product photo upload via **Supabase Storage** (not Vercel Blob — the owner already has a
+  Supabase project for the DB, so this reuses it instead of adding a new vendor/signup).
+  `src/lib/supabase-storage.ts` uploads through the service role key (server-only,
+  `SUPABASE_SERVICE_ROLE_KEY`) and self-provisions the `product-images` bucket (public read)
+  on first upload — no manual dashboard bucket-creation step. Accepts JPG/PNG/WEBP up to 5MB;
+  `next.config.ts`'s `experimental.serverActions.bodySizeLimit` was raised from the 1MB
+  default to 5mb to allow the upload through at all. `imageUrl` now actually renders (plain
+  `<img>`, not `next/image`, since the Storage hostname is per-project and there's no fixed
+  domain to whitelist) on the catalogue product card and cart line items — previously it was
+  captured in the schema/admin form but never displayed anywhere.

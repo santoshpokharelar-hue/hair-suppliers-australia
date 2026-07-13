@@ -1,8 +1,8 @@
 import { Package } from "lucide-react";
 
 // Curated tints in the brand palette, keyed off a hash of the product's brand
-// so each brand reads consistently across the grid. Stand-in for real product
-// photography — imageUrl is null for every seeded product right now.
+// so each brand reads consistently across the grid. Fallback for products
+// with no imageUrl set yet.
 const TINTS = ["#8FA36B", "#8E4E8B", "#C9A03A", "#5D9E4C", "#3E7FA0", "#C05A8E", "#7A4FA3", "#C77B3A"];
 
 function hashTint(seed: string): string {
@@ -11,7 +11,17 @@ function hashTint(seed: string): string {
   return TINTS[Math.abs(hash) % TINTS.length];
 }
 
-export function ProductArt({ brand }: { brand: string }) {
+export function ProductArt({ brand, imageUrl }: { brand: string; imageUrl?: string | null }) {
+  if (imageUrl) {
+    return (
+      // Plain <img>, not next/image — the upload source is a Supabase Storage
+      // URL whose hostname varies per project, so there's no fixed domain to
+      // whitelist in next.config.ts's images.remotePatterns.
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={imageUrl} alt={brand} className="h-[150px] w-full rounded-t-xl object-cover" />
+    );
+  }
+
   const tint = hashTint(brand);
   return (
     <div

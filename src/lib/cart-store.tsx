@@ -13,6 +13,7 @@ export type CartItem = {
   name: string;
   brand: string;
   retailPriceCents: number;
+  imageUrl: string | null;
   qty: number;
 };
 

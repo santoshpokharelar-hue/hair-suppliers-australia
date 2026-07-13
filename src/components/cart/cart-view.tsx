@@ -40,7 +40,7 @@ export function CartView() {
             className="mb-2.5 flex flex-wrap items-center gap-3.5 rounded-xl border border-line bg-card p-3.5"
           >
             <div className="w-16 shrink-0 overflow-hidden rounded-lg">
-              <ProductArt brand={item.brand} />
+              <ProductArt brand={item.brand} imageUrl={item.imageUrl} />
             </div>
             <div className="min-w-[180px] flex-1">
               <div className="text-sm font-bold">{item.name}</div>
