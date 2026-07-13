@@ -31,6 +31,9 @@ export const users = pgTable("users", {
   // Optional, free-text. No checksum or ABR verification — a business account
   // doesn't need a valid/registered ABN to sign up and order.
   abn: text("abn"),
+  // Admin-controlled kill switch — checked in auth.ts's authorize(), blocks
+  // sign-in without deleting the account or its order history.
+  disabled: boolean("disabled").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

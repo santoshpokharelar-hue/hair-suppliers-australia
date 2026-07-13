@@ -28,6 +28,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const valid = await verifyPassword(password, user.passwordHash);
         if (!valid) return null;
+        // Doesn't distinguish this from "wrong password" in the error the
+        // customer sees — same generic message, so disabling an account
+        // doesn't announce itself to whoever's trying to sign into it.
+        if (user.disabled) return null;
 
         return { id: user.id, name: user.name, email: user.email, role: user.role };
       },

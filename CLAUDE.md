@@ -39,11 +39,15 @@ Core rule of the whole site: **prices are hidden until the user logs in.**
 | Admin dashboard `/admin` | ❌ | ❌ | ❌ | ✅ |
 | Set freight price / send quote / decline | ❌ | ❌ | ❌ | ✅ |
 | View/edit/delete ANY order, change status | ❌ | ❌ | ❌ | ✅ |
+| Add/edit/deactivate/delete products | ❌ | ❌ | ❌ | ✅ |
+| View registered users, enable/disable accounts | ❌ | ❌ | ❌ | ✅ |
 
 - The `/admin` route group must be protected by middleware + server-side role check.
   Non-admin users should get a 404 (not a 403) so the dashboard's existence is hidden.
 - Every order mutation API must re-check: (a) session exists, (b) user owns the order or is
   admin, (c) order status allows customer edits if the caller is not admin.
+- A disabled user can't sign in (checked in `authorize()`), but an admin can't disable their
+  own account — no lockout path. Disabling doesn't delete the account or its order history.
 
 ## Signup / login requirements
 
@@ -94,7 +98,7 @@ export function unitPriceCents(retailCents: number, qty: number): number {
 ```
 users:        id, role ('guest'|'business'|'admin'), name, email (unique), phone,
               passwordHash, businessName?, abn? (free-text, unverified),
-              createdAt
+              disabled boolean (admin kill switch, blocks sign-in), createdAt
 addresses:    id, userId, street, suburb, state, postcode, isDefault
 products:     id, sku (unique, e.g. 'HSA-MIE-001'), name, brand, category,
               retailPriceCents, stockQty, imageUrl, active boolean
@@ -138,9 +142,11 @@ Rules:
   recompute via `pricing.ts`).
 - Quotes carry `quotedAt` and expire after 7 days (`QUOTE_EXPIRY_DAYS` in `pricing.ts`);
   expired quotes are not payable.
-- Admin dashboard tabs: **Quote requests / Quoted (awaiting payment) / Paid (current) /
-  Finalized / Cancelled**, with counts. Admin can view, edit, quote, re-quote, change status,
-  and hard-delete any order.
+- Admin dashboard has three top-level sections (`/admin/products`, `/admin/orders`,
+  `/admin/users`) sharing one nav under `/admin`; `/admin` itself just redirects to
+  `/admin/orders`. The Orders section has tabs: **Quote requests / Quoted (awaiting
+  payment) / Paid (current) / Finalized / Cancelled**, with counts. Admin can view, edit,
+  quote, re-quote, change status, and hard-delete any order.
 - Every status change emails the customer (quote ready with pay link, payment received,
   finalized with tracking, cancelled/declined with reason).
 
@@ -210,7 +216,9 @@ RESEND_API_KEY=             EMAIL_FROM=orders@…
 9. **Customer orders page**: list own orders; edit qty / cancel before paid (edits while
    quoted revert to quote_requested). ✅ done
 10. **Admin dashboard**: full tabbed order lists (quote requests / quoted / paid / finalized
-    / cancelled), edit/status/delete, hidden from non-admins. ✅ done
+    / cancelled), edit/status/delete, hidden from non-admins. ✅ done — later extended with
+    Products (add/edit/deactivate/delete) and Users (list, enable/disable) sections; see
+    Resolved.
 11. **Polish**: empty states, loading states, mobile layout, quote-expiry cron, basic rate
     limiting on auth endpoints, error monitoring. ✅ mostly done — quote-expiry is an on-read
     sweep (not a real cron), rate limiting is in-memory/per-instance only, and error
@@ -292,3 +300,17 @@ RESEND_API_KEY=             EMAIL_FROM=orders@…
     qty-edit/cancel) have been clicked through in a real browser — no browser automation tool
     was available in that session. Verified by typecheck + build + targeted DB-level checks
     only.
+- The admin dashboard was reorganised into three sections after the owner asked for it
+  explicitly (not part of the original 11-phase plan): `/admin/products` (add/edit/
+  deactivate/hard-delete catalogue items — hard delete is blocked with a friendly message if
+  the product is referenced by any existing order, since order_items snapshots reference
+  `productId`), `/admin/orders` (the pre-existing order-lifecycle dashboard, unchanged), and
+  `/admin/users` (list all registered users, enable/disable their account). `/admin` itself
+  just redirects to `/admin/orders`; the navbar still has a single "Admin dashboard" link.
+  Added `users.disabled` (boolean, default false) via `drizzle-kit push` — no migration file,
+  since this project has used `db:push` exclusively so far, no `drizzle/` migrations folder
+  exists. A disabled user's `authorize()` call returns null just like a wrong password would
+  (no distinct error message, so disabling doesn't announce itself). Product images are still
+  a plain optional `imageUrl` text field (paste a URL) — no file upload was wired up, since
+  that would mean picking a storage provider (Vercel Blob is the natural fit) and no one has
+  confirmed that's wanted yet.
