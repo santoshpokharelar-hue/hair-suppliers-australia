@@ -8,6 +8,11 @@ export async function listAllProductsForAdmin() {
   return db.select().from(products).orderBy(products.brand, products.name);
 }
 
+export async function getProductById(id: string) {
+  const [product] = await db.select().from(products).where(eq(products.id, id)).limit(1);
+  return product ?? null;
+}
+
 // Case-insensitive substring match across name, brand, category and SKU —
 // works for logged-out visitors too, since only price is gated, not search.
 export async function searchProducts(query?: string) {

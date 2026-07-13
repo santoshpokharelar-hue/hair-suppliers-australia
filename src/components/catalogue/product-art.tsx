@@ -1,4 +1,5 @@
 import { Package } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // Curated tints in the brand palette, keyed off a hash of the product's brand
 // so each brand reads consistently across the grid. Fallback for products
@@ -11,24 +12,36 @@ function hashTint(seed: string): string {
   return TINTS[Math.abs(hash) % TINTS.length];
 }
 
-export function ProductArt({ brand, imageUrl }: { brand: string; imageUrl?: string | null }) {
+// className controls size/rounding — callers size this differently (small
+// cart thumbnail, large catalogue card, hero-sized product page image).
+export function ProductArt({
+  brand,
+  imageUrl,
+  className,
+  iconClassName,
+}: {
+  brand: string;
+  imageUrl?: string | null;
+  className?: string;
+  iconClassName?: string;
+}) {
   if (imageUrl) {
     return (
       // Plain <img>, not next/image — the upload source is a Supabase Storage
       // URL whose hostname varies per project, so there's no fixed domain to
       // whitelist in next.config.ts's images.remotePatterns.
       // eslint-disable-next-line @next/next/no-img-element
-      <img src={imageUrl} alt={brand} className="h-[150px] w-full rounded-t-xl object-cover" />
+      <img src={imageUrl} alt={brand} className={cn("w-full object-cover", className)} />
     );
   }
 
   const tint = hashTint(brand);
   return (
     <div
-      className="flex h-[150px] items-center justify-center rounded-t-xl"
+      className={cn("flex items-center justify-center", className)}
       style={{ background: `linear-gradient(160deg, ${tint}, ${tint}aa)` }}
     >
-      <Package className="size-14 text-white/80" strokeWidth={1.25} />
+      <Package className={cn("size-14 text-white/80", iconClassName)} strokeWidth={1.25} />
     </div>
   );
 }

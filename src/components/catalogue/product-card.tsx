@@ -1,55 +1,39 @@
 import Link from "next/link";
-import { Eye, Lock } from "lucide-react";
-import { AddToCartControls } from "@/components/catalogue/add-to-cart-controls";
+import { Lock } from "lucide-react";
 import { ProductArt } from "@/components/catalogue/product-art";
-import { Button } from "@/components/ui/button";
 import type { products } from "@/db/schema";
+import { formatAUD } from "@/lib/format";
 
 type Product = typeof products.$inferSelect;
 
+// Kept deliberately minimal — image, name, price. Tier pricing, quantity,
+// and add-to-cart all live on the product detail page (/products/[id]) so
+// the catalogue grid stays scannable instead of every card being a mini
+// checkout form.
 export function ProductCard({ product, loggedIn }: { product: Product; loggedIn: boolean }) {
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl border border-line bg-card">
-      <ProductArt brand={product.brand} imageUrl={product.imageUrl} />
+    <Link
+      href={`/products/${product.id}`}
+      className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-card transition-shadow hover:shadow-md"
+    >
+      <ProductArt brand={product.brand} imageUrl={product.imageUrl} className="h-64 rounded-t-2xl" />
       <div className="flex flex-1 flex-col p-4">
         <div className="text-[10.5px] font-extrabold uppercase tracking-wide text-honey">
           {product.category}
         </div>
-        <div className="mt-1 min-h-10 font-display text-[15.5px] font-bold leading-tight text-plum-dark">
+        <div className="mt-1 font-display text-base font-bold leading-snug text-plum-dark group-hover:underline">
           {product.name}
         </div>
-        <div className="mb-2.5 mt-1 text-xs text-muted-foreground">
-          SKU {product.sku} · {product.stockQty} in stock
-        </div>
-
-        <div className="mt-auto">
+        <div className="mt-3">
           {loggedIn ? (
-            <AddToCartControls
-              productId={product.id}
-              sku={product.sku}
-              name={product.name}
-              brand={product.brand}
-              retailPriceCents={product.retailPriceCents}
-              imageUrl={product.imageUrl}
-            />
+            <div className="text-lg font-extrabold text-plum-dark">{formatAUD(product.retailPriceCents)}</div>
           ) : (
-            <>
-              <div className="flex items-center gap-2 rounded-lg border border-dashed border-line bg-paper px-3 py-3 text-xs text-muted-foreground">
-                <Lock className="size-3.5 text-plum" /> Wholesale pricing hidden — login to view
-              </div>
-              <Button
-                render={<Link href="/login" />}
-                nativeButton={false}
-                variant="ghost"
-                size="sm"
-                className="mt-2.5 w-full justify-center"
-              >
-                <Eye className="size-3.5" /> Login to see prices
-              </Button>
-            </>
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-plum">
+              <Lock className="size-3.5" /> Login to see price
+            </div>
           )}
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
