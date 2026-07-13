@@ -27,7 +27,7 @@ export default async function Home({
   return (
     <div>
       <section className="bg-gradient-to-br from-plum-dark to-plum px-6 py-12 text-white">
-        <div className="mx-auto grid max-w-5xl grid-cols-1 items-center gap-9 lg:grid-cols-2">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-9 lg:grid-cols-2">
           <div>
             <div className="mb-3.5 text-xs font-extrabold tracking-[0.2em] text-honey">
               SAME PRODUCTS AS NATURE&apos;S HAIR RETAIL — AT TRADE PRICES
@@ -58,7 +58,7 @@ export default async function Home({
         </div>
       </section>
 
-      <section className="mx-auto max-w-5xl px-6 pb-8 pt-9">
+      <section className="mx-auto max-w-7xl px-6 pb-8 pt-9">
         <div className="mb-2 flex flex-wrap items-center gap-3.5">
           <h2 className="font-display text-2xl text-plum-dark">Product catalogue</h2>
           <span className="text-xs text-muted-foreground">{allProducts.length} products</span>
@@ -73,7 +73,7 @@ export default async function Home({
             the name, brand, category or SKU.
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 pb-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 pb-5 sm:grid-cols-2 lg:grid-cols-3">
             {allProducts.map((product) => (
               <ProductCard key={product.id} product={product} loggedIn={loggedIn} />
             ))}
