@@ -22,8 +22,8 @@ export default function RootLayout({
           <SiteHeader />
           <main className="flex flex-1 flex-col">{children}</main>
           <footer className="mt-12 border-t border-line px-6 py-6 text-center text-xs text-muted-foreground">
-            Hair Suppliers Australia — wholesale partner of Nature&apos;s Hair retail stores ·
-            Demo build (branding not final)
+            © {new Date().getFullYear()} Hair Suppliers Australia — wholesale partner of
+            Nature&apos;s Hair retail stores
           </footer>
         </CartProvider>
         <Toaster position="bottom-center" />
