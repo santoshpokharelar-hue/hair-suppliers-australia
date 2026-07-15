@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { Loader2, Minus, Plus, Send, ShipIcon, Trash2, XCircle } from "lucide-react";
 import {
   adminCancelOrderAction,
+  adminUpdateOrderItemPriceAction,
   adminUpdateOrderItemQtyAction,
   declineQuoteAction,
   deleteOrderAction,
@@ -100,7 +101,23 @@ export function OrderDetailActions({ order }: { order: Order }) {
                     item.qty
                   )}
                 </td>
-                <td className="px-3 py-2 text-right">{formatAUD(item.unitPriceCents)}</td>
+                <td className="px-3 py-2 text-right">
+                  {EDITABLE_ITEM_STATUSES.has(order.status) ? (
+                    <EditablePriceCell
+                      key={`${item.id}-${item.unitPriceCents}`}
+                      item={item}
+                      pending={pending}
+                      onSave={(unitPriceCents) =>
+                        startTransition(async () => {
+                          const res = await adminUpdateOrderItemPriceAction(order.id, item.id, unitPriceCents);
+                          afterMutation(res);
+                        })
+                      }
+                    />
+                  ) : (
+                    formatAUD(item.unitPriceCents)
+                  )}
+                </td>
                 <td className="px-3 py-2 text-right font-semibold">{formatAUD(item.lineTotalCents)}</td>
               </tr>
             ))}
@@ -231,6 +248,43 @@ export function OrderDetailActions({ order }: { order: Order }) {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function EditablePriceCell({
+  item,
+  pending,
+  onSave,
+}: {
+  item: Order["items"][number];
+  pending: boolean;
+  onSave: (unitPriceCents: number) => void;
+}) {
+  const [value, setValue] = useState((item.unitPriceCents / 100).toFixed(2));
+
+  function commit() {
+    const cents = Math.round(parseFloat(value || "0") * 100);
+    if (Number.isFinite(cents) && cents >= 0 && cents !== item.unitPriceCents) {
+      onSave(cents);
+    } else {
+      setValue((item.unitPriceCents / 100).toFixed(2));
+    }
+  }
+
+  return (
+    <Input
+      type="number"
+      min="0"
+      step="0.01"
+      value={value}
+      disabled={pending}
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+      }}
+      className="ml-auto h-8 w-24 text-right"
+    />
   );
 }
 

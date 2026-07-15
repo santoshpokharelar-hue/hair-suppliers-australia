@@ -7,7 +7,7 @@ import { db } from "@/db";
 import { orderItems, orders, products } from "@/db/schema";
 import { sendOrderCancelledEmail, sendOrderFinalizedEmail, sendQuoteReadyEmail } from "@/lib/email";
 import { generateQuoteToken } from "@/lib/order-token";
-import { applyOrderItemQtyChange } from "@/lib/order-items-recompute";
+import { applyOrderItemPriceOverride, applyOrderItemQtyChange } from "@/lib/order-items-recompute";
 import { gstComponentCents } from "@/lib/pricing";
 import { getOrderById } from "@/lib/queries/orders";
 
@@ -172,6 +172,34 @@ export async function adminUpdateOrderItemQtyAction(
     await applyOrderItemQtyChange(orderId, orderItemId, qty, order.status);
   } catch (err) {
     return { ok: false, message: err instanceof Error ? err.message : "Couldn't update quantity." };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath(`/admin/orders/${orderId}`);
+  return { ok: true };
+}
+
+export async function adminUpdateOrderItemPriceAction(
+  orderId: string,
+  orderItemId: string,
+  unitPriceCents: number
+): Promise<OrderActionState> {
+  if (!Number.isInteger(unitPriceCents) || unitPriceCents < 0) {
+    return { ok: false, message: "Enter a valid price." };
+  }
+  const admin = await requireAdmin();
+  if ("error" in admin) return { ok: false, message: admin.error };
+
+  const order = await getOrderById(orderId);
+  if (!order) return { ok: false, message: "Order not found." };
+  if (order.status !== "quote_requested" && order.status !== "quoted") {
+    return { ok: false, message: "Only quote-stage orders can have their prices edited." };
+  }
+
+  try {
+    await applyOrderItemPriceOverride(orderId, orderItemId, unitPriceCents, order.status);
+  } catch (err) {
+    return { ok: false, message: err instanceof Error ? err.message : "Couldn't update price." };
   }
 
   revalidatePath("/admin");
