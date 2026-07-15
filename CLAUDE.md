@@ -330,3 +330,36 @@ SUPABASE_URL=               SUPABASE_SERVICE_ROLE_KEY=  # product photo uploads 
   only (or a "login to see price" lock when logged out), with a new `/products/[id]` page
   holding all the buying UI. `ProductArt`'s height used to be hardcoded at 150px everywhere;
   it now takes a `className` so callers size it per context.
+- **Live deployment** (2026-07-14): site is deployed to Vercel — production URL
+  `https://website-liart-two-97.vercel.app`, project `santoshpokharelar-5988s-projects/website`.
+  Code lives in a private GitHub repo (`santoshpokharelar-hue/hair-suppliers-australia`)
+  connected to the Vercel project, so every `git push origin master` auto-deploys — no manual
+  `vercel deploy` needed for code changes (only env-var-only changes still need a manual
+  redeploy trigger, since secrets live in Vercel's env store, not git). `DATABASE_URL`,
+  `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY`, and Stripe **test-mode** keys
+  (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`) are set
+  in Vercel production, pointing at the same Supabase DB/Storage bucket used locally — there is
+  no separate staging environment. **Resend is still not configured anywhere** — all
+  transactional emails remain a no-op — and the Stripe keys are test-mode only, not live. The
+  quote → pay → webhook → paid chain has been wired up but not yet walked end-to-end with a
+  real test payment.
+- **Admin products page redesign** (2026-07-14, owner feedback: "we can't see the photos right
+  now"): the flat table had no thumbnails at all, so identifying a product meant opening its
+  edit dialog. Replaced with a card grid (`src/components/admin/products-dashboard.tsx`)
+  reusing `ProductArt` for a thumbnail on every card, plus a client-side search box (filters
+  the already-loaded product list by name/brand/category/SKU — no server round-trip, unlike
+  the public catalogue's ILIKE search). Wrapped in its own `max-w-4xl` container, narrower
+  than both the home page catalogue (`max-w-7xl`) and the shared `/admin` layout's `max-w-6xl`
+  — deliberately denser since this is a management view, not marketing.
+- **Admin per-item price override** (2026-07-14, owner: uniform tier-only pricing was "a major
+  flaw" — no way to give one customer a negotiated price on a specific order). Added
+  `applyOrderItemPriceOverride` (`src/lib/order-items-recompute.ts`, sibling to the existing
+  qty-change recompute) and `adminUpdateOrderItemPriceAction`
+  (`src/lib/actions/admin-orders.ts`): while an order is `quote_requested` or `quoted`, the
+  admin can edit a line's unit price directly on `/admin/orders/[id]` (inline input next to
+  the existing qty stepper). This is scoped to **one order**, not a standing per-user discount
+  — there is still no customer-level price list or persistent discount field on `users`; each
+  override only affects the order it's set on, and a subsequent qty change on that line
+  recomputes via the normal tier formula and replaces the override. Editing price after a quote
+  was already sent reverts status to `quote_requested` (same invalidation rule as qty edits),
+  so the admin must click "Send quote" again to push the corrected total to the customer.
