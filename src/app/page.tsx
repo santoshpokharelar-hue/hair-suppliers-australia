@@ -4,6 +4,7 @@ import { Lock } from "lucide-react";
 import { auth } from "@/auth";
 import { ProductCard } from "@/components/catalogue/product-card";
 import { ProductSearch } from "@/components/catalogue/product-search";
+import { LifestyleGrid } from "@/components/site/lifestyle-grid";
 import { LifestyleMarquee } from "@/components/site/lifestyle-marquee";
 import { Button } from "@/components/ui/button";
 import { searchProducts } from "@/lib/queries/products";
@@ -12,6 +13,15 @@ const HERO_IMAGES = [
   { src: "/lifestyle/group-portrait.jpg", alt: "", width: 1890, height: 1890 },
   { src: "/lifestyle/retro-tv-duo.jpg", alt: "", width: 2400, height: 3600 },
   { src: "/lifestyle/tropical-closeup.jpg", alt: "", width: 2848, height: 4288 },
+];
+
+const GRID_IMAGES = [
+  { src: "/lifestyle/parent-child-park.jpg", alt: "", width: 544, height: 633 },
+  { src: "/lifestyle/three-women-embrace.webp", alt: "", width: 385, height: 348 },
+  { src: "/lifestyle/kids-shampoo.webp", alt: "", width: 385, height: 350 },
+  { src: "/lifestyle/women-with-roses.jpg", alt: "", width: 1366, height: 754 },
+  { src: "/lifestyle/products-in-nature.jpg", alt: "", width: 2049, height: 906 },
+  { src: "/lifestyle/red-dress-light.jpg", alt: "", width: 720, height: 1070 },
 ];
 
 const STATS = [
@@ -104,6 +114,16 @@ export default async function Home({
             ))}
           </div>
         )}
+      </section>
+
+      <section className="mx-auto max-w-7xl px-6 pb-16 pt-4">
+        <div className="mb-6">
+          <div className="mb-1.5 text-xs font-extrabold tracking-[0.2em] text-honey">
+            THE PEOPLE BEHIND THE PRODUCTS
+          </div>
+          <h2 className="font-display text-2xl text-plum-dark">Real hair, real routines</h2>
+        </div>
+        <LifestyleGrid images={GRID_IMAGES} />
       </section>
     </div>
   );
