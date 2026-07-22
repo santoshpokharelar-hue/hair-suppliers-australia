@@ -1,11 +1,18 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Lock } from "lucide-react";
 import { auth } from "@/auth";
-import { LifestyleTiles } from "@/components/catalogue/lifestyle-tiles";
 import { ProductCard } from "@/components/catalogue/product-card";
 import { ProductSearch } from "@/components/catalogue/product-search";
+import { LifestyleMarquee } from "@/components/site/lifestyle-marquee";
 import { Button } from "@/components/ui/button";
 import { searchProducts } from "@/lib/queries/products";
+
+const HERO_IMAGES = [
+  { src: "/lifestyle/group-portrait.jpg", alt: "", width: 1890, height: 1890 },
+  { src: "/lifestyle/retro-tv-duo.jpg", alt: "", width: 2400, height: 3600 },
+  { src: "/lifestyle/tropical-closeup.jpg", alt: "", width: 2848, height: 4288 },
+];
 
 const STATS = [
   ["30%", "off packs of 6"],
@@ -26,35 +33,53 @@ export default async function Home({
 
   return (
     <div>
-      <section className="bg-gradient-to-br from-plum-dark to-plum px-6 py-12 text-white">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-9 lg:grid-cols-2">
-          <div>
-            <div className="mb-3.5 text-xs font-extrabold tracking-[0.2em] text-honey">
-              SAME PRODUCTS AS NATURE&apos;S HAIR RETAIL — AT TRADE PRICES
-            </div>
-            <h1 className="mb-4 font-display text-4xl font-bold leading-tight lg:text-5xl">
-              Stock your salon shelves with the brands your clients already ask for.
-            </h1>
-            <p className="mb-5 max-w-lg text-[15.5px] leading-relaxed text-honey-soft/90">
-              Mielle, Design Essentials, Sunny Isle, Aunt Jackie&apos;s, Kaleidoscope and more —
-              the full Nature&apos;s Hair range, packed by the carton and shipped
-              Australia-wide. Sign in to unlock four tiers of wholesale pricing.
-            </p>
-            {!loggedIn && (
-              <Button render={<Link href="/login" />} nativeButton={false} variant="secondary">
-                <Lock className="size-4" /> Login to see prices
-              </Button>
-            )}
-            <div className="mt-7 flex flex-wrap gap-6">
-              {STATS.map(([n, l]) => (
-                <div key={l}>
-                  <div className="font-display text-3xl font-bold text-honey">{n}</div>
-                  <div className="text-xs text-honey-soft/80">{l}</div>
-                </div>
-              ))}
-            </div>
+      <section className="overflow-hidden bg-gradient-to-br from-plum-dark to-plum pt-14 pb-12 text-white">
+        <div className="mx-auto max-w-3xl px-6 text-center">
+          <div className="mb-4 text-xs font-extrabold tracking-[0.2em] text-honey">
+            SAME PRODUCTS AS NATURE&apos;S HAIR RETAIL — AT TRADE PRICES
           </div>
-          <LifestyleTiles />
+          <h1 className="mb-5 text-balance font-display text-4xl font-bold leading-tight lg:text-5xl">
+            Stock your salon shelves with the brands your clients already ask for.
+          </h1>
+          <p className="mx-auto mb-6 max-w-xl text-[15.5px] leading-relaxed text-honey-soft/90">
+            Mielle, Design Essentials, Sunny Isle, Aunt Jackie&apos;s, Kaleidoscope and more —
+            the full Nature&apos;s Hair range, packed by the carton and shipped Australia-wide.
+            Sign in to unlock four tiers of wholesale pricing.
+          </p>
+          {!loggedIn && (
+            <Button render={<Link href="/login" />} nativeButton={false} variant="secondary">
+              <Lock className="size-4" /> Login to see prices
+            </Button>
+          )}
+          <div className="mt-8 flex flex-wrap justify-center gap-8">
+            {STATS.map(([n, l]) => (
+              <div key={l}>
+                <div className="font-display text-3xl font-bold text-honey">{n}</div>
+                <div className="text-xs text-honey-soft/80">{l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-11">
+          <LifestyleMarquee images={HERO_IMAGES} />
+        </div>
+      </section>
+
+      <section className="relative isolate flex min-h-[220px] items-center overflow-hidden">
+        <Image
+          src="/lifestyle/natures-hair-heritage.jpg"
+          alt=""
+          fill
+          sizes="100vw"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-ink/85 via-ink/55 to-transparent" />
+        <div className="relative mx-auto w-full max-w-7xl px-6 py-10">
+          <p className="max-w-md text-lg font-semibold leading-snug text-paper lg:text-xl">
+            Backed by the team behind Nature&apos;s Hair — Australia&apos;s trusted home for
+            textured hair care, now wholesale.
+          </p>
         </div>
       </section>
 
