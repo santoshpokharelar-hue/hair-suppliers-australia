@@ -55,7 +55,7 @@ export default async function Home({
               Stock your salon shelves with the brands your clients already ask for.
             </h1>
             <p className="mb-6 max-w-lg text-[15.5px] leading-relaxed text-honey-soft/90">
-              Mielle, Design Essentials, Sunny Isle, Aunt Jackie&apos;s, Kaleidoscope and more —
+              Mielle, Design Essentials, Sunny Isle, Aunt Jackie&apos;s, and more —
               the full Nature&apos;s Hair range, packed by the carton and shipped Australia-wide.
               Sign in to unlock four tiers of wholesale pricing.
             </p>
