@@ -559,9 +559,17 @@ async function seed() {
   }
   console.log(`Seeded ${SEED_PRODUCTS.length} products.`);
 
-  const adminEmail = process.env.ADMIN_EMAIL;
-  const adminPassword = process.env.ADMIN_PASSWORD;
-  if (adminEmail && adminPassword) {
+  // Supports any number of admin accounts: the unsuffixed ADMIN_EMAIL/
+  // ADMIN_PASSWORD is the first one, then ADMIN_EMAIL_2/ADMIN_PASSWORD_2,
+  // ADMIN_EMAIL_3/ADMIN_PASSWORD_3, etc. — add a numbered pair to .env.local
+  // (and Vercel) and re-run `npm run db:seed` to add another admin.
+  let seededAdmins = 0;
+  for (let n = 1; ; n++) {
+    const suffix = n === 1 ? "" : `_${n}`;
+    const adminEmail = process.env[`ADMIN_EMAIL${suffix}`];
+    const adminPassword = process.env[`ADMIN_PASSWORD${suffix}`];
+    if (!adminEmail || !adminPassword) break;
+
     const passwordHash = await hashPassword(adminPassword);
     await db
       .insert(users)
@@ -577,7 +585,9 @@ async function seed() {
         set: { passwordHash: sql`excluded.password_hash`, role: sql`excluded.role` },
       });
     console.log(`Seeded admin account ${adminEmail}.`);
-  } else {
+    seededAdmins++;
+  }
+  if (seededAdmins === 0) {
     console.log("ADMIN_EMAIL/ADMIN_PASSWORD not set — skipped admin seed.");
   }
 
