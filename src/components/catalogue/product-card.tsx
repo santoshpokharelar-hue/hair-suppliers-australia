@@ -3,6 +3,7 @@ import { Lock } from "lucide-react";
 import { ProductArt } from "@/components/catalogue/product-art";
 import type { products } from "@/db/schema";
 import { formatAUD } from "@/lib/format";
+import { unitPriceCents } from "@/lib/pricing";
 
 type Product = typeof products.$inferSelect;
 
@@ -29,7 +30,9 @@ export function ProductCard({ product, loggedIn }: { product: Product; loggedIn:
         </div>
         <div className="mt-4">
           {loggedIn ? (
-            <div className="text-xl font-extrabold text-plum-dark">{formatAUD(product.retailPriceCents)}</div>
+            <div className="text-xl font-extrabold text-plum-dark">
+              From {formatAUD(unitPriceCents(product.retailPriceCents, 49))}
+            </div>
           ) : (
             <div className="flex items-center gap-1.5 text-sm font-semibold text-plum">
               <Lock className="size-4" /> Login to see price
