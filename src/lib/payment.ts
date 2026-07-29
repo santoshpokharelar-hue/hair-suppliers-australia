@@ -24,9 +24,18 @@ export async function getOrCreatePaymentIntentClientSecret(order: PayableOrder):
     let paymentIntent = null;
 
     if (order.stripePaymentIntentId) {
-      const existing = await stripe.paymentIntents.retrieve(order.stripePaymentIntentId);
-      if (existing.status === "requires_payment_method" || existing.status === "requires_confirmation") {
-        paymentIntent = existing.amount === amount ? existing : await stripe.paymentIntents.update(existing.id, { amount });
+      try {
+        const existing = await stripe.paymentIntents.retrieve(order.stripePaymentIntentId);
+        if (existing.status === "requires_payment_method" || existing.status === "requires_confirmation") {
+          paymentIntent = existing.amount === amount ? existing : await stripe.paymentIntents.update(existing.id, { amount });
+        }
+      } catch (err) {
+        // The saved ID can go stale for reasons that have nothing to do with
+        // this attempt failing — e.g. it was created under test-mode keys
+        // before a switch to live mode, or the PaymentIntent expired/was
+        // deleted on Stripe's side. Fall through to minting a fresh one
+        // rather than treating that as a hard failure.
+        console.error(`Stale stripePaymentIntentId ${order.stripePaymentIntentId} for order ${order.id}, creating a new one:`, err);
       }
     }
 
