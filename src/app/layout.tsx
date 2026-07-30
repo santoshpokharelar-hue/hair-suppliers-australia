@@ -7,7 +7,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Hair Suppliers Australia — Wholesale Portal",
   description:
-    "Trade pricing on the Nature's Hair retail range, for salons and resellers. Branding not final.",
+    "Wholesale trade pricing on afro and textured hair care essentials, for salons and resellers. Branding not final.",
 };
 
 export default function RootLayout({
@@ -22,8 +22,8 @@ export default function RootLayout({
           <SiteHeader />
           <main className="flex flex-1 flex-col">{children}</main>
           <footer className="mt-12 border-t border-line px-6 py-6 text-center text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Hair Suppliers Australia — wholesale partner of
-            Nature&apos;s Hair retail stores
+            © {new Date().getFullYear()} Hair Suppliers Australia — wholesale hair care
+            supplier for salons and resellers
           </footer>
         </CartProvider>
         <Toaster position="bottom-center" />

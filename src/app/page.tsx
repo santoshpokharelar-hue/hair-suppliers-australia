@@ -49,14 +49,14 @@ export default async function Home({
         <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 px-6 lg:grid-cols-2">
           <div>
             <div className="mb-4 text-xs font-extrabold tracking-[0.2em] text-honey">
-              SAME PRODUCTS AS NATURE&apos;S HAIR RETAIL — AT TRADE PRICES
+              WHOLESALE PRICING FOR SALONS & RESELLERS
             </div>
             <h1 className="mb-5 text-balance font-display text-4xl font-bold leading-tight lg:text-5xl">
               Stock your salon shelves with the brands your clients already ask for.
             </h1>
             <p className="mb-6 max-w-lg text-[15.5px] leading-relaxed text-honey-soft/90">
               Mielle, Design Essentials, Sunny Isle, Aunt Jackie&apos;s, and more —
-              the full Nature&apos;s Hair range, packed by the carton and shipped Australia-wide.
+              packed by the carton and shipped Australia-wide.
               Sign in to unlock four tiers of wholesale pricing.
             </p>
             {!loggedIn && (
@@ -100,23 +100,6 @@ export default async function Home({
           <h2 className="font-display text-2xl text-plum-dark">Real hair, real routines</h2>
         </div>
         <LifestyleGrid images={GRID_IMAGES} />
-      </section>
-
-      <section className="relative isolate flex min-h-[220px] items-center overflow-hidden">
-        <Image
-          src="/lifestyle/natures-hair-heritage.jpg"
-          alt=""
-          fill
-          sizes="100vw"
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-ink/85 via-ink/55 to-transparent" />
-        <div className="relative mx-auto w-full max-w-7xl px-6 py-10">
-          <p className="max-w-md text-lg font-semibold leading-snug text-paper lg:text-xl">
-            Backed by the team behind Nature&apos;s Hair — Australia&apos;s trusted home for
-            textured hair care, now wholesale.
-          </p>
-        </div>
       </section>
 
       <section className="mx-auto max-w-7xl px-6 pb-8 pt-9">
