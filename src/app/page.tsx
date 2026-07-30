@@ -9,12 +9,12 @@ import { LifestyleMarquee } from "@/components/site/lifestyle-marquee";
 import { Button } from "@/components/ui/button";
 import { searchProducts } from "@/lib/queries/products";
 
-const HERO_FEATURE = { src: "/lifestyle/women-with-roses.jpg", alt: "", width: 1366, height: 754 };
+const HERO_FEATURE = { src: "/lifestyle/salon-shelf-portrait.jpg", alt: "", width: 928, height: 1152 };
 
 const HERO_IMAGES = [
   { src: "/lifestyle/group-portrait.jpg", alt: "", width: 1890, height: 1890 },
   { src: "/lifestyle/retro-tv-duo.jpg", alt: "", width: 2400, height: 3600 },
-  { src: "/lifestyle/tropical-closeup.jpg", alt: "", width: 2848, height: 4288 },
+  { src: "/lifestyle/product-holding-portrait.jpg", alt: "", width: 1376, height: 768 },
 ];
 
 const GRID_IMAGES = [
@@ -74,7 +74,7 @@ export default async function Home({
             </div>
           </div>
 
-          <div className="aspect-[4/3] overflow-hidden rounded-2xl shadow-xl shadow-black/30">
+          <div className="aspect-[3/4] overflow-hidden rounded-2xl shadow-xl shadow-black/30">
             <Image
               src={HERO_FEATURE.src}
               alt={HERO_FEATURE.alt}
