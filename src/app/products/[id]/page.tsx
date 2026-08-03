@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft, Lock } from "lucide-react";
@@ -8,6 +9,36 @@ import { Button } from "@/components/ui/button";
 import { formatAUD } from "@/lib/format";
 import { getProductById } from "@/lib/queries/products";
 
+// Every product page shared the same generic title/description before this —
+// duplicate metadata across ~500 pages actively suppresses search rankings,
+// since Google can't tell the pages apart. No price here even though it's
+// tempting for rich results: prices are gated behind login site-wide
+// (CLAUDE.md), and structured data is public regardless of what the
+// rendered page shows a logged-out visitor — putting a price in JSON-LD
+// would leak it to anyone reading page source.
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const product = await getProductById(id);
+  if (!product || !product.active) return {};
+
+  const title = `${product.name} | Hair Suppliers Australia`;
+  const description = `${product.name} — wholesale pricing for salons and resellers, up to 55% off retail on bulk packs. ${product.category}. SKU ${product.sku}. Ships Australia-wide.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: product.imageUrl ? [{ url: product.imageUrl }] : undefined,
+    },
+  };
+}
+
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const [session, product] = await Promise.all([auth(), getProductById(id)]);
@@ -15,8 +46,22 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   const loggedIn = Boolean(session?.user);
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    sku: product.sku,
+    category: product.category,
+    brand: { "@type": "Brand", name: product.brand },
+    ...(product.imageUrl ? { image: product.imageUrl } : {}),
+  };
+
   return (
     <div className="mx-auto w-full max-w-5xl px-5 py-10">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Link href="/" className="mb-6 inline-flex items-center gap-1 text-sm font-semibold text-plum">
         <ChevronLeft className="size-4" /> Back to catalogue
       </Link>

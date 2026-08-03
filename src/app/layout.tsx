@@ -7,7 +7,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Hair Suppliers Australia — Wholesale Portal",
   description:
-    "Wholesale trade pricing on afro and textured hair care essentials, for salons and resellers. Branding not final.",
+    "Wholesale trade pricing on afro and textured hair care essentials — Mielle, Design Essentials, Sunny Isle, and more. For salons and resellers, Australia-wide.",
 };
 
 export default function RootLayout({
