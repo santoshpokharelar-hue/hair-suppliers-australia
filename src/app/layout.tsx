@@ -2,12 +2,22 @@ import type { Metadata } from "next";
 import { SiteHeader } from "@/components/site/site-header";
 import { Toaster } from "@/components/ui/sonner";
 import { CartProvider } from "@/lib/cart-store";
+import { getSiteUrl } from "@/lib/site-url";
 import "./globals.css";
 
+// The site is reachable at more than one URL (the apex domain, www, and the
+// original vercel.app domain all serve identical content with no redirect
+// between them) — metadataBase + a canonical tag on every page tells search
+// engines which one to actually index, so ranking signals consolidate onto
+// one URL instead of splitting across duplicates.
 export const metadata: Metadata = {
+  metadataBase: new URL(getSiteUrl()),
   title: "Hair Suppliers Australia — Wholesale Portal",
   description:
     "Wholesale trade pricing on afro and textured hair care essentials — Mielle, Design Essentials, Sunny Isle, and more. For salons and resellers, Australia-wide.",
+  alternates: {
+    canonical: "/",
+  },
 };
 
 export default function RootLayout({
